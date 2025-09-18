@@ -30,30 +30,23 @@ function saveData(data) {
 app.post("/upload", upload.single("image"), (req, res) => {
   try {
     const file = req.file;
-    if (!file) {
-      console.error("❌ Không nhận được file!");
-      return res.status(400).send("No file uploaded");
-    }
-
-    console.log("✅ Nhận file:", file.originalname, file.mimetype);
+    if (!file) return res.status(400).send("No file uploaded");
 
     const data = loadData();
     const id = Date.now().toString();
 
     const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-
-    data.images[id] = {
-      mime: file.mimetype,
-      data: base64
-    };
+    data.images[id] = { mime: file.mimetype, data: base64 };
     saveData(data);
 
-    const link = `http://localhost:${PORT}/image/${id}`;
-    console.log("📸 Link ảnh:", link);
+    // Dùng req.headers.host hoặc req.protocol + host để tạo link đúng
+    const host = req.headers.host; // vd: upddata.onrender.com
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol; // https
+    const link = `${protocol}://${host}/image/${id}`;
 
     res.json({ link });
   } catch (err) {
-    console.error("🔥 Lỗi upload:", err);
+    console.error(err);
     res.status(500).send("Internal Server Error");
   }
 });
